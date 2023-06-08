@@ -1,4 +1,5 @@
 import Background from './Background.js';
+import Wall from './Wall.js';
 
 export default class App {
   static canvas = document.querySelector('canvas');
@@ -14,6 +15,7 @@ export default class App {
       new Background({ img: document.querySelector('#bg2-img'), speed: -2 }),
       new Background({ img: document.querySelector('#bg1-img'), speed: -4 }),
     ];
+    this.walls = [new Wall({ type: 'SMALL' })];
     window.addEventListener('resize', this.resize.bind(this));
   }
 
@@ -39,10 +41,28 @@ export default class App {
       delta = now - then;
       if (delta < App.interval) return;
 
+      // 배경 관리
       this.backgrounds.forEach((background) => {
-        background.update();
+        //background.update();
         background.draw();
       });
+
+      // 벽 관리
+      for (let i = this.walls.length - 1; i >= 0; i--) {
+        this.walls[i].update();
+        this.walls[i].draw();
+        // 벽 제거관련
+        if (this.walls[i].isOutside) {
+          this.walls.splice(i, 1);
+          continue;
+        }
+        // 새로운 벽 생성관련
+        if (this.walls[i].canGenerateNext) {
+          this.walls[i].generatedNext = true;
+          const newWall = new Wall({ type: Math.random() > 0.3 ? 'SMALL' : 'BIG' });
+          this.walls.push(newWall);
+        }
+      }
 
       then = now - (delta % App.interval);
     };
